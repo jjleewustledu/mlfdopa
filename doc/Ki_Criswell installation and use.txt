@@ -1,0 +1,114 @@
+------------------------
+Ki_Criswell INSTALLATION
+------------------------
+
+On linux platforms, Matlab searches the following locations to find files:
+
+	0.  locations specified by Matlab functions addpath and savepath;
+	1.  the result of Matlab function userpath, which is ${HOME}/Documents/MATLAB by default;
+	2.  locations in the MATLABPATH environment variable, commonly ${HOME}/matlab;
+	3.  the result of Matlab function matlabroot + 'toolbox', e.g., /usr/local/MATLAB/R2018b/toolbox.
+
+Install Ki_Criswell simply by saving it to one of these locations: 1 or 2 may be simplest.  
+
+
+
+-----------------------
+Ki_Criswell Quick Start
+-----------------------
+
+Run Ki_Criswell at the Matlab command line:
+
+	>> mlfdopa.Ki_Criswell.Kocc('mars_10722_fdopa1_333_fwhm10_freesurfer_rois.csv')
+	Warning: Variable names were modified to make them valid MATLAB identifiers. The original names are saved in the
+	VariableDescriptions property. 
+
+	ans =
+
+	  5×12 table
+
+	                             L_caudate               R_caudate            L_ant_putamen     ...
+	                        ____________________    ___________________    ____________________
+
+	    Kocc                 0.00889857635077907    0.00904686823586281      0.0093350171732301 ...
+	    upper confidence     0.00983031972022766    0.00996169789629996      0.0102595929464806
+	    lower confidence     0.00796683298133047    0.00813203857542566     0.00841044139997957
+	    p-value             7.92407023449073e-13     4.625069696848e-13    3.35410203138706e-13
+	    R-squared              0.962432782535622      0.964872992337108       0.966253186069401
+
+
+The warning refers to the fact that csv entries such as 'Midpoint(sec)' were converted by Ki_Criswell for internal parsing.  It is only consequential if you use region labels with characters that Ki_Criswell's parsers do not support.  E.g., if your  data csv contained a region label 'myregion(subregion)', the output csv will have a modified region label 'myregion_subregion_'.   
+
+The results for Kocc, the 95% confidence intervals, p-value and R-squared statistic display in the command window.  They are also saved in a new file 'some_location_for_data/mars_11022_fdopa1_333_fwhm10_freesurfer_rois_Kocc.csv' for use in workflows.  
+
+
+
+----------------------
+Ki_Criswell Parameters
+----------------------
+
+You can specify the start time and end time for sampling the activity curves submitted to linear regression.   If the requested start time precedes the peak of the reference activity curve, the start time will be fixed at the time of that peak.  If the requested end time exceeds the time of the end of the scan, the end time will be fixed to the time of the last available data.  Consequently, specifying the start time or end time will only reduce degrees of freedom of data of regression.  
+
+	>> mlfdopa.Ki_Criswell.Kocc('mars_10722_fdopa1_333_fwhm10_freesurfer_rois.csv', 'sampleStartTime', 24, 'sampleEndTime', 94)
+	Warning: Variable names were modified to make them valid MATLAB identifiers. The original names are saved in the
+	VariableDescriptions property. 
+
+	ans =
+
+	  5×12 table
+
+	                             L_caudate              R_caudate             L_ant_putamen     ...
+	                        ___________________    ____________________    ____________________
+
+	    Kocc                0.00791943233649943     0.00808460798387749     0.00833883446698622 ...
+	    upper confidence    0.00899032476202057     0.00915134608628348     0.00936805625636617
+	    lower confidence     0.0068485399109783      0.0070178698814715     0.00730961267760627
+	    p-value             1.7101247207842e-09    1.28919186316371e-09    5.95885094146559e-10
+	    R-squared             0.955820448358846       0.957846373724414       0.962920072490276
+
+
+For purposes of automation, Ki_Criswell primarily provides results by writing csv files.  To diagnose unexpected problems, Ki_Criswell will generate Matlab plots of intermediate quantities:  activity ratio vs. time, cumulative time integral of activity vs. time, the Patlak plot, the activities of all regions vs. time.
+
+	>> mlfdopa.Ki_Criswell.Kocc('mars_10722_fdopa1_333_fwhm10_freesurfer_rois.csv', 'doplot', true)
+
+
+
+
+	
+
+
+
+----------------
+Ki_Criswell Help
+----------------
+
+	>> help Ki_Criswell.Kocc
+	  Kocc estimates Ki by Patlak's method from TACs from various regions of interest with respect to the TAC
+	   from the occipital region.  KI_CRISWELL expects the TACs to be organized in a csv file as follows.
+	   - First row contains labels:
+	     patid,frame,Length(sec),Midpoint(sec),occip, ...
+	     L_caudate,R_caudate,L_ant_putamen,R_ant_putamen,L_pos_putamen,R_pos_putamen,L_thalamus,R_thalamus,...
+	     L_pallidum,R_pallidum,L_VDC,R_VDC.
+	   - Subsequent rows contain comma separated numerical values.
+	 
+	   The implementation generates Patlak quantities including the ratio of tracer activities 
+	   compared to reference activities and cumulative time integrals of the reference activities;
+	   it then fits a linear regression with 5-fold cross-validation.
+	   See also:  Phelps, M.  PET:  Molecular Imaging and Biological Applications.  (2004)  pp. 165--169 and refs.
+	 
+	   @param (required) csv is the name of the csv file.
+	   @param named sampleStartTime is the start time of activity samples for a Patlak model (min).
+	          The requested start time will not precede the peak of the reference activity curve.
+	   @param named sampleEndTime is the end time of activity samples for a Patlak model (min).
+	          The requested end time will not exceed the end time for the data.
+	   @param named writecsv is logical; default == true; if true write results in a new csv named
+	          using the fileprefix of param csv + param suffix + '.csv'.
+	   @param named suffix is char; default == '_Kocc'.
+	   @param named refreg is a string for the reference which matches one of the regions listed in the first 
+	          row of labels; default is 'occip'.
+	   @param named doplots is logical; default == false;
+	   @return Kocc and statistics estimated by linear regression according to Patlak's method (1/min).
+	   @return this object which may be queried for diagnostic information.
+
+
+	>> doc Ki_Criswell
