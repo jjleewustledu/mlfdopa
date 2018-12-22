@@ -51,16 +51,44 @@ classdef Ki_Criswell
             %  @return Kocc and statistics estimated by linear regression according to Patlak's method (1/min).
             %  @return this object which may be queried for diagnostic information.
             
-            try                
-                this = mlfdopa.Ki_Criswell(varargin{:});
-            catch ME
-                this = Ki_Criswell(varargin{:});
+            if (isempty(varargin))
+                if (8 == exist('Ki_Criswell', 'class'))
+                    disp(evalc('help Ki_Criswell.Kocc'))
+                elseif (8 == exist('mlfdopa.Ki_Criswell', 'class'))
+                    disp(evalc('help mlfdopa.Ki_Criswell.Kocc'))
+                end    
+                error('mlfdopa:RuntimeWarning', ...
+                    'Ki_Criswell.Kocc:  needs more information regarding what you wish to do.');               
             end
-            T = this.writetable;
-            if (this.doplots)
-                this.plotTacs;
-                this.plotIntermed;
-                this.plotPatlak;
+            if (~ischar(varargin{1}))
+                fprintf('Ki_Criswell.Kocc:  doesn''t support specifying CSV files expressed as type %s\n', class(varargin{1}));
+                error('mlfdopa:Value', ...
+                    'Ki_Criswell.Kocc:  needs the name of an existing CSV files expressed as char.');
+            end
+            if (2 ~= exist(varargin{1}, 'file'))
+                fprintf('Ki_Criswell.Kocc:  could not find a file named %s.  ', varargin{1}); 
+                fprintf('Your current working directory is %s.\n', pwd);
+                error('mlfdopa:FileNotFoundError', ...
+                    'Please check the directory and name of the file you need.');
+            end
+            if (8 == exist('Ki_Criswell', 'class'))
+                this = Ki_Criswell(varargin{:}); 
+            elseif (8 == exist('mlfdopa.Ki_Criswell', 'class'))
+                this = mlfdopa.Ki_Criswell(varargin{:}); 
+            else
+                disp('Please see more about <a href = "https://www.mathworks.com/help/matlab/matlab_env/what-is-the-matlab-search-path.html">The Matlab Search Path</a>');
+                error('mlfdopa:ValueError', ...
+                    'Ki_Criswell.Kocc:  the requested class, Ki_Criswell, is not in Matlab''s path');
+            end 
+            try   
+                T = this.writetable;
+                if (this.doplots)
+                    this.plotTacs;
+                    this.plotIntermed;
+                    this.plotPatlak;     
+                end
+            catch ME  
+                dispexcept(ME, 'mlfdopa:RuntimeWarning', 'Ki_Criswell.Kocc');
             end
         end
     end
